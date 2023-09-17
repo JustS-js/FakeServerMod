@@ -1,41 +1,38 @@
 {
 	"schemaVersion": 1,
-	"id": "modid",
+	"id": "fsm",
 	"version": "${version}",
-	"name": "Example mod",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"name": "Fake Server",
+	"description": "Fake being on a server via client manipulation",
 	"authors": [
-		"Me!"
+		"Just_S"
 	],
 	"contact": {
 		"homepage": "https://fabricmc.net/",
 		"sources": "https://github.com/FabricMC/fabric-example-mod"
 	},
 	"license": "CC0-1.0",
-	"icon": "assets/modid/icon.png",
+	"icon": "assets/fsm/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"com.example.ExampleMod"
+			"net.just_s.FSM"
 		],
 		"client": [
-			"com.example.ExampleModClient"
+			"net.just_s.FSMClient"
 		]
 	},
 	"mixins": [
-		"modid.mixins.json",
+      "fsm.mixins.json",
 		{
-			"config": "modid.client.mixins.json",
+			"config": "fsm.client.mixins.json",
 			"environment": "client"
 		}
 	],
 	"depends": {
 		"fabricloader": ">=0.14.21",
-		"minecraft": "~1.20.1",
+		"minecraft": ">=1.20",
 		"java": ">=17",
 		"fabric-api": "*"
-	},
-	"suggests": {
-		"another-mod": "*"
 	}
 }
