@@ -2,79 +2,50 @@ package net.just_s.socket;
 
 import net.just_s.FSM;
 import net.minecraft.network.PacketByteBuf;
+import org.java_websocket.WebSocket;
+import org.java_websocket.handshake.ClientHandshake;
+import org.java_websocket.server.WebSocketServer;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
-import java.util.Scanner;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 
-public class Server {
-    private ServerSocket serverSocket;
-    private Socket client;
+public class Server extends WebSocketServer {
 
-    public Server() {
-        try {
-            FSM.LOGGER.info("Server()");
-            serverSocket = new ServerSocket(80);
-            FSM.LOGGER.info("Server created...");
-            client = serverSocket.accept();
-            FSM.LOGGER.info("Client connected!");
-
-            InputStream in = client.getInputStream();
-            OutputStream out = client.getOutputStream();
-            Scanner s = new Scanner(in, StandardCharsets.UTF_8);
-
-            String data = s.useDelimiter("\\r\\n\\r\\n").next();
-            Matcher get = Pattern.compile("^GET").matcher(data);
-
-            FSM.LOGGER.info("got GET input");
-
-            if (get.find()) {
-                Matcher match = Pattern.compile("Sec-WebSocket-Key: (.*)").matcher(data);
-                match.find();
-                byte[] response = ("HTTP/1.1 101 Switching Protocols\r\n"
-                        + "Connection: Upgrade\r\n"
-                        + "Upgrade: websocket\r\n"
-                        + "Sec-WebSocket-Accept: "
-                        + Base64.getEncoder().encodeToString(MessageDigest.getInstance("SHA-1").digest((match.group(1) + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11").getBytes(StandardCharsets.UTF_8)))
-                        + "\r\n\r\n").getBytes(StandardCharsets.UTF_8);
-                out.write(response, 0, response.length);
-            }
-            FSM.LOGGER.info("changed to wss type");
-        } catch (IOException | NoSuchAlgorithmException e) {
-            FSM.LOGGER.error("Server() | " + e.getMessage());
-        }
+    public Server(InetSocketAddress address) {
+        super(address);
     }
 
-    public boolean stop() {
-        try {
-            client.close();
-            serverSocket.close();
-            return true;
-        } catch (IOException e) {
-            FSM.LOGGER.error("stop | " + e.getMessage());
-        }
-        return false;
+    public void sendPacket(PacketByteBuf buf) {
+        this.broadcast(buf.array());
     }
 
-    public boolean sendPacket(PacketByteBuf buf) {
-        if (serverSocket == null) return false;
-        if (client == null) return false;
-        try {
-            OutputStream out =  client.getOutputStream();
-            out.write(buf.array(), 0, buf.capacity());
-            return true;
-        } catch (IOException e) {
-            FSM.LOGGER.error("sendPacket | " + e);
-        }
-        return false;
+    @Override
+    public void onOpen(WebSocket conn, ClientHandshake handshake) {
+        FSM.LOGGER.info("new connection to " + conn.getRemoteSocketAddress());
+    }
+
+    @Override
+    public void onClose(WebSocket conn, int code, String reason, boolean remote) {
+        FSM.LOGGER.info("closed " + conn.getRemoteSocketAddress() + " with exit code " + code + " additional info: " + reason);
+    }
+
+    @Override
+    public void onMessage(WebSocket conn, String message) {
+        FSM.LOGGER.info("received message from "	+ conn.getRemoteSocketAddress() + ": " + message);
+    }
+
+    @Override
+    public void onMessage( WebSocket conn, ByteBuffer message ) {
+        FSM.LOGGER.info("received ByteBuffer from "	+ conn.getRemoteSocketAddress());
+    }
+
+    @Override
+    public void onError(WebSocket conn, Exception ex) {
+        System.err.println("an error occurred on connection " + conn.getRemoteSocketAddress()  + ":" + ex);
+    }
+
+    @Override
+    public void onStart() {
+        FSM.LOGGER.info("server started successfully");
     }
 }

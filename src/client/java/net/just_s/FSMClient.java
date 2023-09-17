@@ -12,10 +12,16 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.PacketListener;
 import net.minecraft.network.packet.Packet;
-import net.minecraft.server.network.ServerPlayerEntity;
+
+import java.net.InetSocketAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 public class FSMClient implements ClientModInitializer {
 	public static final MinecraftClient MC = MinecraftClient.getInstance();
+
+	private static final String host = "localhost";
+	private static final int port = 8887;
 
 	public static boolean isReceiver;
 	public static boolean isRunning;
@@ -35,27 +41,39 @@ public class FSMClient implements ClientModInitializer {
 	public static void startFaking() {
 		modThread = new Thread(() -> {
 			if (isReceiver) {
-				client = new Client();
+				try {
+					client = new Client(new URI("ws://" + host + ":" + port));
+					client.connect();
+				} catch (URISyntaxException e) {
+					e.printStackTrace();
+				}
 			} else {
-				server = new Server();
+				server = new Server(new InetSocketAddress(host, port));
+				server.run();
 			}
 		}, "fsm");
 		modThread.start();
 	}
 
 	public static void stopFaking() {
-		boolean hasStopped = (isReceiver) ? client.stop() : server.stop();
-		if (hasStopped) {
-			try {
-				modThread.join();
-			} catch (InterruptedException ignored) {}
-		}
+		try {
+			if (isReceiver) {
+				client.close();
+			} else {
+				server.stop();
+			}
+			modThread.join();
+		} catch (InterruptedException ignored) {}
 	}
 
-	public static <T extends PacketListener> void sendFakePacket(Packet<T> packet) {
+	public static <T extends PacketListener> void sendFakePacket(Packet<T> packet, int id) {
 		if (server == null) return;
 		PacketByteBuf buf = PacketByteBufs.create();
+		buf.writeByte(id);
 		packet.write(buf);
 		server.sendPacket(buf);
+
+		// todo: ClientPlayNetworkHandler ignores unknown players
+		// todo: ClientPlayNetworkHandler disconnects if text is not validated
 	}
 }

@@ -1,70 +1,72 @@
 package net.just_s.socket;
 
-import io.netty.buffer.ByteBuf;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.just_s.FSM;
 import net.just_s.FSMClient;
 import net.just_s.mixin.client.ClientConnectionAccessor;
-import net.minecraft.network.ClientConnection;
-import net.minecraft.network.NetworkState;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.listener.ClientPlayPacketListener;
+import net.minecraft.network.listener.PacketListener;
 import net.minecraft.network.packet.Packet;
+import net.minecraft.network.packet.s2c.play.ChatMessageS2CPacket;
 import net.minecraft.network.packet.s2c.play.GameMessageS2CPacket;
 import net.minecraft.network.packet.s2c.play.PlayerListHeaderS2CPacket;
 import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket;
+import org.java_websocket.client.WebSocketClient;
+import org.java_websocket.handshake.ServerHandshake;
 
 import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.WebSocket;
-import java.util.concurrent.CompletionStage;
+import java.nio.ByteBuffer;
 
-public class Client {
-    private static final String SOCKET_URL = "ws://127.0.0.1:80";
-    private final WebSocket clientSocket;
+public class Client extends WebSocketClient {
 
-    public Client() {
-        URI uri = URI.create(SOCKET_URL);
-        FSM.LOGGER.info("Created URI");
-        clientSocket = HttpClient
-                .newHttpClient()
-                .newWebSocketBuilder()
-                .buildAsync(URI.create(SOCKET_URL), new WebSocketClient())
-                .join();
-        FSM.LOGGER.info("created client socket!");
+    public Client(URI serverURI) {
+        super(serverURI);
     }
 
-    public boolean stop() {
-        clientSocket.abort();
-        return true;
+    @Override
+    public void onOpen(ServerHandshake handshakedata) {
+        FSM.LOGGER.info("new connection opened");
     }
 
-    private static class WebSocketClient implements WebSocket.Listener {
-        @Override
-        public void onOpen(WebSocket webSocket) {
-            FSM.LOGGER.info("Client Connected to local server of FSM");
-            WebSocket.Listener.super.onOpen(webSocket);
-        }
+    @Override
+    public void onClose(int code, String reason, boolean remote) {
+        FSM.LOGGER.info("closed with exit code " + code + " additional info: " + reason);
+    }
 
-        @Override
-        public CompletionStage<?> onText(WebSocket webSocket, CharSequence data, boolean last) {
-            FSM.LOGGER.info("FSM Client >>> " + data);
+    @Override
+    public void onMessage(String message) {
+        FSM.LOGGER.info("received message: " + message);
+    }
 
-            try {
-                PacketByteBuf buf = null;
-                Packet<?> packet;
-                switch (buf.readVarInt()) {
-                    case 99 -> packet = new GameMessageS2CPacket(buf);
-                    case 100 -> packet = new PlayerListHeaderS2CPacket(buf);
-                    case 57 -> packet = new PlayerListS2CPacket(buf);
-                    default -> {
-                        return WebSocket.Listener.super.onText(webSocket, data, last);
-                    }
+    @Override
+    public void onMessage(ByteBuffer message) {
+        try {
+            PacketByteBuf buf = PacketByteBufs.create();
+            buf.writeBytes(message.array());
+            Packet<ClientPlayPacketListener> packet;
+            int id = buf.readVarInt();
+            FSM.LOGGER.info("received ByteBuffer id | " + id);
+            //FSM.LOGGER.info("buf | " + buf);
+            switch (id) {
+                case 0 -> packet = new ChatMessageS2CPacket(buf);
+                case 1 -> packet = new GameMessageS2CPacket(buf);
+                case 2 -> packet = new PlayerListHeaderS2CPacket(buf);
+                case 3 -> packet = new PlayerListS2CPacket(buf);
+                default -> {
+                    return;
                 }
-                ClientConnectionAccessor con = (ClientConnectionAccessor)FSMClient.MC.getNetworkHandler().getConnection();
-                ClientConnectionAccessor.invokeHandlePacket(packet, con.getPacketListener());
-            } catch (Exception e) {
-
             }
-            return WebSocket.Listener.super.onText(webSocket, data, last);
+            ClientConnectionAccessor con = (ClientConnectionAccessor) FSMClient.MC.getNetworkHandler().getConnection();
+            packet.apply((ClientPlayPacketListener) con.getPacketListener());
+        } catch (Exception e) {
+
         }
     }
+
+    @Override
+    public void onError(Exception ex) {
+        FSM.LOGGER.error("an error occurred:" + ex);
+    }
+
 }
