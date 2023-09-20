@@ -1,7 +1,15 @@
 package net.just_s.socket;
 
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.just_s.FSM;
+import net.just_s.FSMClient;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.packet.Packet;
+import net.minecraft.network.packet.s2c.play.ChatMessageS2CPacket;
+import net.minecraft.network.packet.s2c.play.GameMessageS2CPacket;
+import net.minecraft.network.packet.s2c.play.PlayerListHeaderS2CPacket;
+import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket;
+import net.minecraft.server.network.ServerPlayerEntity;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
@@ -19,9 +27,28 @@ public class Server extends WebSocketServer {
         this.broadcast(buf.array());
     }
 
+    public void sendPacket(Packet<?> packet) {
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeByte(packetToId(packet));
+        packet.write(buf);
+        sendPacket(buf);
+    }
+
+    private int packetToId(Packet<?> packet) {
+        if (packet instanceof ChatMessageS2CPacket) return 0;
+        if (packet instanceof GameMessageS2CPacket) return 1;
+        if (packet instanceof PlayerListHeaderS2CPacket) return 2;
+        if (packet instanceof PlayerListS2CPacket) return 3;
+        return -1;
+    }
+
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
         FSM.LOGGER.info("new connection to " + conn.getRemoteSocketAddress());
+        sendPacket(new PlayerListS2CPacket(
+                PlayerListS2CPacket.Action.UPDATE_LISTED,
+                (ServerPlayerEntity) FSMClient.MC.player.networkHandler.getListedPlayerListEntries()
+        ));
     }
 
     @Override

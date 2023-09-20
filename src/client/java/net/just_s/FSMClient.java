@@ -1,5 +1,6 @@
 package net.just_s;
 
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
@@ -9,13 +10,17 @@ import net.just_s.command.CommandStop;
 import net.just_s.socket.Client;
 import net.just_s.socket.Server;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.PacketListener;
 import net.minecraft.network.packet.Packet;
+import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket;
+import net.minecraft.text.Text;
 
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.*;
 
 public class FSMClient implements ClientModInitializer {
 	public static final MinecraftClient MC = MinecraftClient.getInstance();
@@ -31,6 +36,8 @@ public class FSMClient implements ClientModInitializer {
 	private static Server server;
 	private static Client client;
 
+	public static List<Text> fakePlayers = new ArrayList<>();
+
 	@Override
 	public void onInitializeClient() {
 		ClientCommandRegistrationCallback.EVENT.register(CommandStop::register);
@@ -41,6 +48,7 @@ public class FSMClient implements ClientModInitializer {
 	public static void startFaking() {
 		modThread = new Thread(() -> {
 			if (isReceiver) {
+
 				try {
 					client = new Client(new URI("ws://" + host + ":" + port));
 					client.connect();
@@ -73,7 +81,7 @@ public class FSMClient implements ClientModInitializer {
 		packet.write(buf);
 		server.sendPacket(buf);
 
-		// todo: ClientPlayNetworkHandler ignores unknown players
+		// todo: ClientPlayNetworkHandler make it create normal playerEntries
 		// todo: ClientPlayNetworkHandler disconnects if text is not validated
 	}
 }
