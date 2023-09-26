@@ -51,7 +51,7 @@ public class Client extends WebSocketClient {
             //FSM.LOGGER.info("buf | " + buf);
             switch (id) {
                 case GAMEMSG -> onChatPacket(buf);
-//                case 1 -> packet = new GameMessageS2CPacket(buf);
+                case HEADERLIST -> onHeaderPacket(buf);
 //                case 2 -> packet = new PlayerListHeaderS2CPacket(buf);
 //                case 3 -> packet = new PlayerListC2CPacket(buf);
                 default -> {
@@ -74,6 +74,16 @@ public class Client extends WebSocketClient {
         Text message = Text.Serializer.fromJson(json);
 
         FSMClient.MC.getMessageHandler().onGameMessage(message, overlay);
+    }
+
+    private void onHeaderPacket(PacketByteBuf buf) {
+        boolean isHeaderEmpty = buf.readBoolean();
+        boolean isFooterEmpty = buf.readBoolean();
+        Text header = Text.Serializer.fromJson(buf.readString());
+        Text footer = Text.Serializer.fromJson(buf.readString());
+
+        FSMClient.MC.inGameHud.getPlayerListHud().setHeader(isHeaderEmpty ? null : header);
+        FSMClient.MC.inGameHud.getPlayerListHud().setFooter(isFooterEmpty ? null : footer);
     }
 
 }

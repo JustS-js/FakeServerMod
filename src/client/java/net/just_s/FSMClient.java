@@ -80,6 +80,6 @@ public class FSMClient implements ClientModInitializer {
 	}
 
 	public enum PacketId {
-		CHATMSG, GAMEMSG, HEADERLIST, PLAYERLIST
+		GAMEMSG, HEADERLIST, PLAYERLIST
 	}
 }
