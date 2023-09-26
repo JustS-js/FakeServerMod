@@ -28,6 +28,8 @@ public class ClientPlayNetworkHandlerMixin {
                         Text.literal(message.getSignedContent())
                 )
         );
+
+        instance.onChatMessage(message, sender, params);
     }
 
     @Redirect(method = "onGameMessage",
@@ -35,5 +37,7 @@ public class ClientPlayNetworkHandlerMixin {
     private void getListedPlayerListEntries(MessageHandler instance, Text message, boolean overlay) {
         // todo: serialize and send MESSAGE (Text) and OVERLAY (boolean)
         FSMClient.MC.getMessageHandler().onGameMessage(message, overlay);
+
+        instance.onGameMessage(message, overlay);
     }
 }
