@@ -3,13 +3,12 @@
   "package": "net.just_s.mixin.client",
   "compatibilityLevel": "JAVA_17",
   "client": [
-    "ClientConnectionAccessor"
+    "ClientPlayNetworkHandlerMixin",
+    "MixinPlayerListHud"
   ],
   "injectors": {
     "defaultRequire": 1
   },
   "mixins": [
-    "ClientConnectionMixin",
-    "ClientPlayNetworkHandlerMixin"
   ]
 }

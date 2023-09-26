@@ -7,8 +7,10 @@ import net.just_s.FSMClient;
 import net.minecraft.client.gui.hud.MessageIndicator;
 import net.minecraft.client.gui.hud.PlayerListHud;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.network.message.MessageHandler;
 import net.minecraft.client.network.message.MessageTrustStatus;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.message.FilterMask;
 import net.minecraft.network.message.MessageSignatureData;
@@ -17,6 +19,7 @@ import net.minecraft.network.message.SignedMessage;
 import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket;
 import net.minecraft.network.packet.s2c.play.ChatMessageS2CPacket;
 import net.minecraft.network.packet.s2c.play.PlayerListHeaderS2CPacket;
+import net.minecraft.scoreboard.Team;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextContent;
@@ -26,6 +29,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Collection;
 import java.util.List;
 
 @Mixin(ClientPlayNetworkHandler.class)
@@ -65,7 +69,7 @@ public class ClientPlayNetworkHandlerMixin {
         instance.onGameMessage(message, overlay);
     }
 
-    @Inject(method = "onPlayerListHeader", at = @At("TAIL"), cancellable = true)
+    @Inject(method = "onPlayerListHeader", at = @At("HEAD"), cancellable = true)
     private void onPlayerListHeader(PlayerListHeaderS2CPacket packet, CallbackInfo ci) {
         if (!FSMClient.isRunning) return;
         if (FSMClient.isReceiver) {ci.cancel();return;}
@@ -81,6 +85,13 @@ public class ClientPlayNetworkHandlerMixin {
         buf.writeString(
                 packet.getFooter().getString().isEmpty() ? "" : Text.Serializer.toJson(packet.getFooter())
         );
+
+        Collection<PlayerListEntry> list = FSMClient.MC.getNetworkHandler().getPlayerList();
+        buf.writeInt(list.size());
+        for (PlayerListEntry entry : list) {
+            Text name = Team.decorateName(entry.getScoreboardTeam(), Text.literal(entry.getProfile().getName()));
+            buf.writeString(Text.Serializer.toJson(name));
+        }
 
         FSMClient.sendPacket(buf);
 

@@ -3,22 +3,14 @@ package net.just_s.socket;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.just_s.FSM;
 import net.just_s.FSMClient;
-import net.just_s.mixin.client.ClientConnectionAccessor;
-import net.just_s.mixin.client.ClientPlayNetworkHandlerMixin;
 import net.minecraft.network.PacketByteBuf;
-import net.minecraft.network.listener.ClientPlayPacketListener;
-import net.minecraft.network.packet.Packet;
-import net.minecraft.network.packet.s2c.play.ChatMessageS2CPacket;
-import net.minecraft.network.packet.s2c.play.GameMessageS2CPacket;
-import net.minecraft.network.packet.s2c.play.PlayerListHeaderS2CPacket;
-import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket;
 import net.minecraft.text.Text;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 
 import java.net.URI;
 import java.nio.ByteBuffer;
-import java.util.EnumSet;
+import java.util.List;
 
 public class Client extends WebSocketClient {
 
@@ -84,6 +76,13 @@ public class Client extends WebSocketClient {
 
         FSMClient.MC.inGameHud.getPlayerListHud().setHeader(isHeaderEmpty ? null : header);
         FSMClient.MC.inGameHud.getPlayerListHud().setFooter(isFooterEmpty ? null : footer);
+
+        int k = buf.readInt();
+        FSMClient.fakePlayers.clear();
+        while (0 < k--) {
+            Text name = Text.Serializer.fromJson(buf.readString());
+            FSMClient.fakePlayers.add(name);
+        }
     }
 
 }
