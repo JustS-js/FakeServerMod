@@ -23,6 +23,10 @@ public class Server extends WebSocketServer {
         super(address);
     }
 
+    public void sendPacket(PacketByteBuf buf) {
+        this.broadcast(buf.array());
+    }
+
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
         FSM.LOGGER.info("new connection to " + conn.getRemoteSocketAddress());
