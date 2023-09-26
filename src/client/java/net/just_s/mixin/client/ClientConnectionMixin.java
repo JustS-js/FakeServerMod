@@ -21,35 +21,35 @@ public abstract class ClientConnectionMixin {
     @Shadow
     private static <T extends PacketListener> void handlePacket(Packet<T> packet, PacketListener listener) {}
 
-    @Inject(method = "handlePacket", at = @At("HEAD"))
-    private static <T extends PacketListener> void inject(Packet<T> packet, PacketListener listener, CallbackInfo ci) {
-        if (!FSMClient.isRunning || FSMClient.isReceiver) return;
-        if (    packet instanceof ChatMessageS2CPacket ||
-                packet instanceof GameMessageS2CPacket ||
-                packet instanceof PlayerListHeaderS2CPacket ||
-                packet instanceof PlayerListS2CPacket
-        ) {
-            int id = (packet instanceof ChatMessageS2CPacket) ? 0 :
-                    (packet instanceof GameMessageS2CPacket) ? 1 :
-                    (packet instanceof PlayerListHeaderS2CPacket) ? 2 : 3;
-            FSM.LOGGER.info("sending " + id);
-            FSMClient.sendFakePacket(packet, id);
-        }
-    }
+//    @Inject(method = "handlePacket", at = @At("HEAD"))
+//    private static <T extends PacketListener> void inject(Packet<T> packet, PacketListener listener, CallbackInfo ci) {
+//        if (!FSMClient.isRunning || FSMClient.isReceiver) return;
+//        if (    packet instanceof ChatMessageS2CPacket ||
+//                packet instanceof GameMessageS2CPacket ||
+//                packet instanceof PlayerListHeaderS2CPacket ||
+//                packet instanceof PlayerListS2CPacket
+//        ) {
+//            int id = (packet instanceof ChatMessageS2CPacket) ? 0 :
+//                    (packet instanceof GameMessageS2CPacket) ? 1 :
+//                    (packet instanceof PlayerListHeaderS2CPacket) ? 2 : 3;
+//            FSM.LOGGER.info("sending " + id);
+//            FSMClient.sendFakePacket(packet, id);
+//        }
+//    }
 
-    @Redirect(method = "channelRead0(Lio/netty/channel/ChannelHandlerContext;Lnet/minecraft/network/packet/Packet;)V",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/network/ClientConnection;handlePacket(Lnet/minecraft/network/packet/Packet;Lnet/minecraft/network/listener/PacketListener;)V"))
-    private <T extends PacketListener> void reader(Packet<T> packet, PacketListener listener) {
-        if (FSMClient.isRunning && FSMClient.isReceiver) {
-            if (
-                    packet instanceof ChatMessageS2CPacket ||
-                    packet instanceof GameMessageS2CPacket ||
-                    packet instanceof PlayerListHeaderS2CPacket ||
-                    packet instanceof PlayerListS2CPacket
-            ) {
-                return;
-            }
-        }
-        handlePacket(packet, listener);
-    }
+//    @Redirect(method = "channelRead0(Lio/netty/channel/ChannelHandlerContext;Lnet/minecraft/network/packet/Packet;)V",
+//            at = @At(value = "INVOKE", target = "Lnet/minecraft/network/ClientConnection;handlePacket(Lnet/minecraft/network/packet/Packet;Lnet/minecraft/network/listener/PacketListener;)V"))
+//    private <T extends PacketListener> void reader(Packet<T> packet, PacketListener listener) {
+//        if (FSMClient.isRunning && FSMClient.isReceiver) {
+//            if (
+//                    packet instanceof ChatMessageS2CPacket ||
+//                    packet instanceof GameMessageS2CPacket ||
+//                    packet instanceof PlayerListHeaderS2CPacket ||
+//                    packet instanceof PlayerListS2CPacket
+//            ) {
+//                return;
+//            }
+//        }
+//        handlePacket(packet, listener);
+//    }
 }

@@ -23,32 +23,9 @@ public class Server extends WebSocketServer {
         super(address);
     }
 
-    public void sendPacket(PacketByteBuf buf) {
-        this.broadcast(buf.array());
-    }
-
-    public void sendPacket(Packet<?> packet) {
-        PacketByteBuf buf = PacketByteBufs.create();
-        buf.writeByte(packetToId(packet));
-        packet.write(buf);
-        sendPacket(buf);
-    }
-
-    private int packetToId(Packet<?> packet) {
-        if (packet instanceof ChatMessageS2CPacket) return 0;
-        if (packet instanceof GameMessageS2CPacket) return 1;
-        if (packet instanceof PlayerListHeaderS2CPacket) return 2;
-        if (packet instanceof PlayerListS2CPacket) return 3;
-        return -1;
-    }
-
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
         FSM.LOGGER.info("new connection to " + conn.getRemoteSocketAddress());
-        sendPacket(new PlayerListS2CPacket(
-                PlayerListS2CPacket.Action.UPDATE_LISTED,
-                (ServerPlayerEntity) FSMClient.MC.player.networkHandler.getListedPlayerListEntries()
-        ));
     }
 
     @Override

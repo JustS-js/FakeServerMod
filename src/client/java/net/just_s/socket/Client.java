@@ -45,21 +45,18 @@ public class Client extends WebSocketClient {
         try {
             PacketByteBuf buf = PacketByteBufs.create();
             buf.writeBytes(message.array());
-            Packet<ClientPlayPacketListener> packet;
             int id = buf.readVarInt();
             FSM.LOGGER.info("received ByteBuffer id | " + id);
             //FSM.LOGGER.info("buf | " + buf);
-            switch (id) {
-                case 0 -> packet = new ChatMessageS2CPacket(buf);
-                case 1 -> packet = new GameMessageS2CPacket(buf);
-                case 2 -> packet = new PlayerListHeaderS2CPacket(buf);
-                case 3 -> packet = new PlayerListC2CPacket(buf);
-                default -> {
-                    return;
-                }
-            }
-            ClientConnectionAccessor con = (ClientConnectionAccessor) FSMClient.MC.getNetworkHandler().getConnection();
-            packet.apply((ClientPlayPacketListener) con.getPacketListener());
+//            switch (id) {
+//                case 0 -> packet = new ChatMessageS2CPacket(buf);
+//                case 1 -> packet = new GameMessageS2CPacket(buf);
+//                case 2 -> packet = new PlayerListHeaderS2CPacket(buf);
+//                case 3 -> packet = new PlayerListC2CPacket(buf);
+//                default -> {
+//                    return;
+//                }
+//            }
         } catch (Exception e) {
 
         }

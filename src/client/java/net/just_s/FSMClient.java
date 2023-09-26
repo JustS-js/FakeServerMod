@@ -74,14 +74,11 @@ public class FSMClient implements ClientModInitializer {
 		} catch (InterruptedException ignored) {}
 	}
 
-	public static <T extends PacketListener> void sendFakePacket(Packet<T> packet, int id) {
-		if (server == null) return;
-		PacketByteBuf buf = PacketByteBufs.create();
-		buf.writeByte(id);
-		packet.write(buf);
-		server.sendPacket(buf);
-
-		// todo: ClientPlayNetworkHandler make it create normal playerEntries
-		// todo: ClientPlayNetworkHandler disconnects if text is not validated
-	}
+//	public static <T extends PacketListener> void sendFakePacket(Packet<T> packet, int id) {
+//		if (server == null) return;
+//		PacketByteBuf buf = PacketByteBufs.create();
+//		buf.writeByte(id);
+//		packet.write(buf);
+//		server.sendPacket(buf);
+//	}
 }
