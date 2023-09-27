@@ -1,15 +1,7 @@
 package net.just_s.socket;
 
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.just_s.FSM;
-import net.just_s.FSMClient;
 import net.minecraft.network.PacketByteBuf;
-import net.minecraft.network.packet.Packet;
-import net.minecraft.network.packet.s2c.play.ChatMessageS2CPacket;
-import net.minecraft.network.packet.s2c.play.GameMessageS2CPacket;
-import net.minecraft.network.packet.s2c.play.PlayerListHeaderS2CPacket;
-import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket;
-import net.minecraft.server.network.ServerPlayerEntity;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
@@ -39,12 +31,12 @@ public class Server extends WebSocketServer {
 
     @Override
     public void onMessage(WebSocket conn, String message) {
-        FSM.LOGGER.info("received message from "	+ conn.getRemoteSocketAddress() + ": " + message);
+        //FSM.LOGGER.info("received message from "	+ conn.getRemoteSocketAddress() + ": " + message);
     }
 
     @Override
     public void onMessage( WebSocket conn, ByteBuffer message ) {
-        FSM.LOGGER.info("received ByteBuffer from "	+ conn.getRemoteSocketAddress());
+        //FSM.LOGGER.info("received ByteBuffer from "	+ conn.getRemoteSocketAddress());
     }
 
     @Override

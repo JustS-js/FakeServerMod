@@ -19,6 +19,7 @@ import net.minecraft.scoreboard.ScoreboardPlayerScore;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.StringVisitable;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 import net.minecraft.world.GameMode;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -31,6 +32,7 @@ import java.util.stream.Collectors;
 
 @Mixin(PlayerListHud.class)
 public class MixinPlayerListHud {
+    private static final Identifier ICONS_TEXTURE = new Identifier("textures/gui/icons.png");
     @Shadow
     private Text header;
     @Shadow
@@ -43,14 +45,12 @@ public class MixinPlayerListHud {
         ci.cancel();
 
         List<Text> list = FSMClient.fakePlayers.stream().toList();
-        FSM.LOGGER.info(list+"");
         int i = 0;
         Iterator var8 = list.iterator();
 
         int k;
         while(var8.hasNext()) {
             Text playerName = (Text)var8.next();
-            FSM.LOGGER.info(playerName.toString());
             k = FSMClient.MC.textRenderer.getWidth(playerName);
             i = Math.max(i, k);
         }
@@ -62,10 +62,7 @@ public class MixinPlayerListHud {
             ++k;
         }
 
-        boolean bl = false;
-        int n = 0;
-
-        int o = Math.min(k * (i + n + 13), scaledWindowWidth - 50) / k;
+        int o = Math.min(k * (i + 13), scaledWindowWidth - 50) / k;
         int p = scaledWindowWidth / 2 - (o * k + (k - 1) * 5) / 2;
         int q = 10;
         int r = o * k + (k - 1) * 5;
@@ -128,6 +125,12 @@ public class MixinPlayerListHud {
                 Text playerName = (Text)list.get(u);
 
                 context.drawTextWithShadow(FSMClient.MC.textRenderer, playerName, w, x, -1);
+
+                context.getMatrices().push();
+                context.getMatrices().translate(0.0F, 0.0F, 100.0F);
+                int j = playerName.getString().length() % 6;
+                context.drawTexture(ICONS_TEXTURE, w + o - 11, x, 0, 176 + j * 8, 10, 8);
+                context.getMatrices().pop();
             }
         }
 

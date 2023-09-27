@@ -30,7 +30,7 @@ public class Client extends WebSocketClient {
 
     @Override
     public void onMessage(String message) {
-        FSM.LOGGER.info("received message: " + message);
+        //FSM.LOGGER.info("received message: " + message);
     }
 
     @Override
@@ -39,7 +39,6 @@ public class Client extends WebSocketClient {
             PacketByteBuf buf = PacketByteBufs.create();
             buf.writeBytes(message.array());
             FSMClient.PacketId id = FSMClient.PacketId.values()[buf.readVarInt()];
-            FSM.LOGGER.info("received ByteBuffer id | " + id);
             //FSM.LOGGER.info("buf | " + buf);
             switch (id) {
                 case GAMEMSG -> onChatPacket(buf);
